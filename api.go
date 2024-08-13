@@ -1,19 +1,19 @@
 package main
 
 import (
-	"net/http"
+    "net/http"
     "time"
     "big-john/logger"
 )
 
 type APIServer struct {
-	addr string
+    addr string
 }
 
 func NewAPIServer(addr string) *APIServer {
-	return &APIServer{
-		addr: addr,
-	}
+    return &APIServer{
+        addr: addr,
+    }
 }
 
 
@@ -22,11 +22,11 @@ func (s *APIServer) Run() error {
     l := logger.Get()
 
 
-	router := http.NewServeMux()
-	router.HandleFunc("GET /users/{uid}", func(w http.ResponseWriter, r *http.Request) {
-		userID := r.PathValue("uid")
-		w.Write([]byte("User ID:" + userID))
-	})
+    router := http.NewServeMux()
+    router.HandleFunc("GET /users/{uid}", func(w http.ResponseWriter, r *http.Request) {
+        userID := r.PathValue("uid")
+        w.Write([]byte("User ID:" + userID))
+    })
 
     v1 := http.NewServeMux()
     v1.Handle("/api/v1/", http.StripPrefix("/api/v1", router))
@@ -37,14 +37,14 @@ func (s *APIServer) Run() error {
         RequireAuthMiddleware,
     )
 
-	server := http.Server{
-		Addr:    s.addr,
-		Handler: middlewareChain(v1),
-	}
+    server := http.Server{
+        Addr:    s.addr,
+        Handler: middlewareChain(v1),
+    }
 
     l.Info().Str("port", server.Addr).Msg("BIG JOHN serving...")
 
-	return server.ListenAndServe()
+    return server.ListenAndServe()
 }
 
 
