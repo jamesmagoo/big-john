@@ -42,6 +42,9 @@ func (s *APIServer) Run() error {
         Handler: middlewareChain(v1),
     }
 
+
+    logger.PrintAsciiArt()
+
     l.Info().Str("port", server.Addr).Msg("BIG JOHN serving...")
 
     return server.ListenAndServe()

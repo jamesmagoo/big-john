@@ -6,15 +6,33 @@ import (
     "runtime/debug"
     "strconv"
     "sync"
+    "fmt"
     "time"
     "github.com/rs/zerolog"
     "github.com/rs/zerolog/pkgerrors"
     "gopkg.in/natefinch/lumberjack.v2"
 )
 
+const asciiArt = `
+$$$$$$$\  $$$$$$\  $$$$$$\                         $$$$$\  $$$$$$\  $$\   $$\ $$\   $$\ 
+$$  __$$\ \_$$  _|$$  __$$\                        \__$$ |$$  __$$\ $$ |  $$ |$$$\  $$ |
+$$ |  $$ |  $$ |  $$ /  \__|                          $$ |$$ /  $$ |$$ |  $$ |$$$$\ $$ |
+$$$$$$$\ |  $$ |  $$ |$$$$\       $$$$$$\             $$ |$$ |  $$ |$$$$$$$$ |$$ $$\$$ |
+$$  __$$\   $$ |  $$ |\_$$ |      \______|      $$\   $$ |$$ |  $$ |$$  __$$ |$$ \$$$$ |
+$$ |  $$ |  $$ |  $$ |  $$ |                    $$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |\$$$ |
+$$$$$$$  |$$$$$$\ \$$$$$$  |                    \$$$$$$  | $$$$$$  |$$ |  $$ |$$ | \$$ |
+\_______/ \______| \______/                      \______/  \______/ \__|  \__|\__|  \__|
+                                                                                          
+`
+
 var once sync.Once
 
 var log zerolog.Logger
+
+
+func PrintAsciiArt() {
+	fmt.Println(asciiArt)
+}
 
 func Get() zerolog.Logger {
     once.Do(func() {
