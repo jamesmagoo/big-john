@@ -6,6 +6,21 @@ import (
     "big-john/logger"
 )
 
+type loggingResponseWriter struct {
+    http.ResponseWriter
+    statusCode int
+}
+
+func newLoggingResponseWriter(w http.ResponseWriter) *loggingResponseWriter {
+    return &loggingResponseWriter{w, http.StatusOK}
+}
+
+func (lrw *loggingResponseWriter) WriteHeader(code int) {
+    lrw.ResponseWriter.WriteHeader(code)
+    lrw.statusCode = code
+}
+
+
 func RequestLoggerMiddleware(next http.Handler) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         start := time.Now()
@@ -28,7 +43,7 @@ func RequestLoggerMiddleware(next http.Handler) http.HandlerFunc {
             Int("status_code", lrw.statusCode).
             Msg("incoming request")
         }()
-        next.ServeHTTP(w, r)
+        next.ServeHTTP(lrw, r)
     }
 
 }

@@ -22,4 +22,4 @@
 
 tmp
 .tmp/
-.log
+*.log

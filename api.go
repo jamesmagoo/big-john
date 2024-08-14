@@ -15,6 +15,11 @@ func NewAPIServer(addr string) *APIServer {
     }
 }
 
+func pingHandler(w http.ResponseWriter, r *http.Request){
+    pathParams := r.PathValue("name")
+    w.Write([]byte("pong" + "_" + pathParams))
+}
+
 
 func (s *APIServer) Run() error {
 
@@ -26,6 +31,7 @@ func (s *APIServer) Run() error {
         userID := r.PathValue("uid")
         w.Write([]byte("User ID:" + userID))
     })
+    router.HandleFunc("POST /ping/{name}", pingHandler)
 
     v1 := http.NewServeMux()
     v1.Handle("/api/v1/", http.StripPrefix("/api/v1", router))
@@ -48,19 +54,5 @@ func (s *APIServer) Run() error {
     return server.ListenAndServe()
 }
 
-
-type loggingResponseWriter struct {
-    http.ResponseWriter
-    statusCode int
-}
-
-func newLoggingResponseWriter(w http.ResponseWriter) *loggingResponseWriter {
-    return &loggingResponseWriter{w, http.StatusOK}
-}
-
-func (lrw *loggingResponseWriter) WriteHeader(code int) {
-    lrw.statusCode = code
-    lrw.ResponseWriter.WriteHeader(code)
-}
 
 
