@@ -20,12 +20,36 @@ func pingHandler(w http.ResponseWriter, r *http.Request){
     w.Write([]byte("pong" + "_" + pathParams))
 }
 
+func serveHome(w http.ResponseWriter, r *http.Request) {
+    log := logger.Get()
+    log.Info().Str("URL", r.URL.Path)
+	if r.URL.Path != "/" {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	http.ServeFile(w, r, "home.html")
+}
+
 
 func (s *APIServer) Run() error {
 
     l := logger.Get()
 
+    hub := newHub()
+
+	go hub.run()
+
     router := http.NewServeMux()
+
+    router.HandleFunc("/", serveHome)
+
+	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		serveWs(hub, w, r)
+	})
 
     router.HandleFunc("GET /users/{uid}", func(w http.ResponseWriter, r *http.Request) {
         userID := r.PathValue("uid")
@@ -39,7 +63,7 @@ func (s *APIServer) Run() error {
     // order matters here...
     middlewareChain := MiddlewareChain(
         RequestLoggerMiddleware,
-        RequireAuthMiddleware,
+        //RequireAuthMiddleware,
     )
 
     server := http.Server{

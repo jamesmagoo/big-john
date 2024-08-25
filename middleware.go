@@ -4,6 +4,8 @@ import (
     "net/http"
     "time"
     "big-john/logger"
+    "bufio"
+    "net"
 )
 
 type loggingResponseWriter struct {
@@ -20,6 +22,13 @@ func (lrw *loggingResponseWriter) WriteHeader(code int) {
     lrw.statusCode = code
 }
 
+// Implement http.Hijacker interface
+func (lrw *loggingResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+    if hj, ok := lrw.ResponseWriter.(http.Hijacker); ok {
+        return hj.Hijack()
+    }
+    return nil, nil, http.ErrNotSupported
+}
 
 func RequestLoggerMiddleware(next http.Handler) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
