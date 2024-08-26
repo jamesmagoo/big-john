@@ -41,8 +41,8 @@ func (a *Agent) ProcessInput(input string) (string, error) {
 	// Store the result
 	err = a.dataSource.StoreResult(input, response)
 	if err != nil {
-        a.log.Error().Err(err).Msg("Failed to store result in cache")
-        // We don't return this error because the AI processing was successful
+		a.log.Error().Err(err).Msg("Failed to store result in cache")
+		// We don't return this error because the AI processing was successful
 	}
 
 	return response, nil

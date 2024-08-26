@@ -1,10 +1,10 @@
 package api
 
 import (
-    "net/http"
-    "big-john/pkg/logger"
-    "big-john/internal/processor"
-    "encoding/json"
+	"big-john/internal/processor"
+	"big-john/pkg/logger"
+	"encoding/json"
+	"net/http"
 )
 
 // type APIServer struct {
@@ -21,7 +21,7 @@ type APIServer struct {
 	addr      string
 	processor *processor.Processor
 	log       *logger.Logger
-    hub       *Hub
+	hub       *Hub
 }
 
 func NewAPIServer(addr string, p *processor.Processor) *APIServer {
@@ -29,17 +29,17 @@ func NewAPIServer(addr string, p *processor.Processor) *APIServer {
 		addr:      addr,
 		processor: p,
 		log:       logger.Get(),
-        hub:       newHub(),
+		hub:       newHub(),
 	}
 }
 
-func pingHandler(w http.ResponseWriter, r *http.Request){
-    pathParams := r.PathValue("name")
-    w.Write([]byte("pong" + "_" + pathParams))
+func pingHandler(w http.ResponseWriter, r *http.Request) {
+	pathParams := r.PathValue("name")
+	w.Write([]byte("pong" + "_" + pathParams))
 }
 
 func (s *APIServer) handlePrompt(w http.ResponseWriter, r *http.Request) {
- 
+
 	var req struct {
 		Prompt string `json:"prompt"`
 	}
@@ -61,8 +61,8 @@ func (s *APIServer) handlePrompt(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
-    log := logger.Get()
-    log.Info().Str("URL", r.URL.Path)
+	log := logger.Get()
+	log.Info().Str("URL", r.URL.Path)
 	if r.URL.Path != "/" {
 		http.Error(w, "Not found", http.StatusNotFound)
 		return
@@ -74,46 +74,40 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "home.html")
 }
 
-
 func (s *APIServer) Run() error {
 
 	go s.hub.run()
 
-    router := http.NewServeMux()
+	router := http.NewServeMux()
 
-    router.HandleFunc("/", serveHome)
-    router.HandleFunc("POST /prompt", s.handlePrompt)
-
+	router.HandleFunc("/", serveHome)
+	router.HandleFunc("POST /prompt", s.handlePrompt)
 	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		s.serveWs(s.hub, w, r)
 	})
+	router.HandleFunc("GET /users/{uid}", func(w http.ResponseWriter, r *http.Request) {
+		userID := r.PathValue("uid")
+		w.Write([]byte("User ID:" + userID))
+	})
+	router.HandleFunc("POST /ping/{name}", pingHandler)
 
-    router.HandleFunc("GET /users/{uid}", func(w http.ResponseWriter, r *http.Request) {
-        userID := r.PathValue("uid")
-        w.Write([]byte("User ID:" + userID))
-    })
-    router.HandleFunc("POST /ping/{name}", pingHandler)
+	v1 := http.NewServeMux()
+	v1.Handle("/api/v1/", http.StripPrefix("/api/v1", router))
 
-    v1 := http.NewServeMux()
-    v1.Handle("/api/v1/", http.StripPrefix("/api/v1", router))
+	// order matters here...
+	middlewareChain := MiddlewareChain(
+		RequestLoggerMiddleware,
+		//RequireAuthMiddleware,
+	)
 
-    // order matters here...
-    middlewareChain := MiddlewareChain(
-        RequestLoggerMiddleware,
-        //RequireAuthMiddleware,
-    )
+	server := http.Server{
+		Addr:    s.addr,
+		Handler: middlewareChain(v1),
+	}
 
-    server := http.Server{
-        Addr:    s.addr,
-        Handler: middlewareChain(v1),
-    }
+	logger.PrintAsciiArt()
 
-    logger.PrintAsciiArt()
+	s.log.Info().Str("port", server.Addr).Msg("BIG JOHN serving...")
 
-    s.log.Info().Str("port", server.Addr).Msg("BIG JOHN serving...")
-
-    return server.ListenAndServe()
+	return server.ListenAndServe()
 }
-
-
-
