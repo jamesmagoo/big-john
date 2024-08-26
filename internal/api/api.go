@@ -1,23 +1,61 @@
-package main
+package api
 
 import (
     "net/http"
-    "big-john/logger"
+    "big-john/pkg/logger"
+    "big-john/internal/processor"
+    "encoding/json"
 )
 
+// type APIServer struct {
+//     addr string
+// }
+
+// func NewAPIServer(addr string) *APIServer {
+//     return &APIServer{
+//         addr: addr,
+//     }
+// }
+
 type APIServer struct {
-    addr string
+	addr      string
+	processor *processor.Processor
+	log       *logger.Logger
 }
 
-func NewAPIServer(addr string) *APIServer {
-    return &APIServer{
-        addr: addr,
-    }
+func NewAPIServer(addr string, p *processor.Processor) *APIServer {
+	return &APIServer{
+		addr:      addr,
+		processor: p,
+		log:       logger.Get(),
+	}
 }
 
 func pingHandler(w http.ResponseWriter, r *http.Request){
     pathParams := r.PathValue("name")
     w.Write([]byte("pong" + "_" + pathParams))
+}
+
+func (s *APIServer) handlePrompt(w http.ResponseWriter, r *http.Request) {
+ 
+	var req struct {
+		Prompt string `json:"prompt"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	response, err := s.processor.ProcessPrompt(req.Prompt)
+	if err != nil {
+		s.log.Error().Err(err).Msg("Failed to process prompt")
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"response": response})
 }
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +84,7 @@ func (s *APIServer) Run() error {
     router := http.NewServeMux()
 
     router.HandleFunc("/", serveHome)
+    router.HandleFunc("POST /prompt", s.handlePrompt)
 
 	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(hub, w, r)

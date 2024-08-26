@@ -1,0 +1,8 @@
+graph TD
+    A[HTTP Server] --> P[Processor]
+    B[WebSocket Handler] --> P
+    P --> C[Agent]
+    C --> D[AI Adapter]
+    C --> E[Data Source]
+    D --> F[AI Models]
+    E --> G[Data Repository]

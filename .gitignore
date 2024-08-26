@@ -23,3 +23,7 @@
 tmp
 .tmp/
 *.log
+*.env
+
+# Binary output directory
+/bin/

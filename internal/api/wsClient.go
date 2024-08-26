@@ -1,11 +1,11 @@
-package main
+package api
 
 import (
 	"bytes"
 	"net/http"
 	"time"
 	"github.com/gorilla/websocket"
-    "big-john/logger"
+    "big-john/pkg/logger"
 )
 
 const (

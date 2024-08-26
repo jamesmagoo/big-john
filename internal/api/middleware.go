@@ -1,9 +1,9 @@
-package main
+package api
 
 import (
     "net/http"
     "time"
-    "big-john/logger"
+    "big-john/pkg/logger"
     "bufio"
     "net"
 )
@@ -22,7 +22,7 @@ func (lrw *loggingResponseWriter) WriteHeader(code int) {
     lrw.statusCode = code
 }
 
-// Implement http.Hijacker interface
+// Implement http.Hijacker interface for websocket upgrades...
 func (lrw *loggingResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
     if hj, ok := lrw.ResponseWriter.(http.Hijacker); ok {
         return hj.Hijack()
