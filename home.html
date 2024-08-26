@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Chat Example</title>
+<title>Big John Chat</title>
 <script type="text/javascript">
 window.onload = function () {
     var conn;
@@ -23,6 +23,12 @@ window.onload = function () {
         if (!msg.value) {
             return false;
         }
+        // Display user message
+        var userItem = document.createElement("div");
+        userItem.className = "user-message";
+        userItem.innerHTML = "<strong>You:</strong> " + msg.value;
+        appendLog(userItem);
+
         conn.send(msg.value);
         msg.value = "";
         return false;
@@ -39,7 +45,8 @@ window.onload = function () {
             var messages = evt.data.split('\n');
             for (var i = 0; i < messages.length; i++) {
                 var item = document.createElement("div");
-                item.innerText = messages[i];
+                item.className = "ai-message";
+                item.innerHTML = "<strong>Big John:</strong> " + messages[i];
                 appendLog(item);
             }
         };
@@ -61,7 +68,8 @@ body {
     margin: 0;
     width: 100%;
     height: 100%;
-    background: gray;
+    background: #f0f0f0;
+    font-family: Arial, sans-serif;
 }
 
 #log {
@@ -74,6 +82,8 @@ body {
     right: 0.5em;
     bottom: 3em;
     overflow: auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
 }
 
 #form {
@@ -86,13 +96,55 @@ body {
     overflow: hidden;
 }
 
+#msg {
+    width: calc(100% - 70px);
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-right: 10px;
+    border-radius: 5px;
+}
+
+input[type="submit"] {
+    width: 60px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.user-message {
+    background-color: #e1f5fe;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 10px;
+    max-width: 80%;
+    align-self: flex-end;
+    word-wrap: break-word;
+}
+
+.ai-message {
+    background-color: #f0f4c3;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 10px;
+    max-width: 80%;
+    align-self: flex-start;
+    word-wrap: break-word;
+}
 </style>
 </head>
 <body>
 <div id="log"></div>
 <form id="form">
+    <input type="text" id="msg" size="64" autofocus placeholder="Type your message here..." />
     <input type="submit" value="Send" />
-    <input type="text" id="msg" size="64" autofocus />
 </form>
 </body>
 </html>

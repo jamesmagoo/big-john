@@ -21,6 +21,7 @@ type APIServer struct {
 	addr      string
 	processor *processor.Processor
 	log       *logger.Logger
+    hub       *Hub
 }
 
 func NewAPIServer(addr string, p *processor.Processor) *APIServer {
@@ -28,6 +29,7 @@ func NewAPIServer(addr string, p *processor.Processor) *APIServer {
 		addr:      addr,
 		processor: p,
 		log:       logger.Get(),
+        hub:       newHub(),
 	}
 }
 
@@ -75,11 +77,7 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 
 func (s *APIServer) Run() error {
 
-    l := logger.Get()
-
-    hub := newHub()
-
-	go hub.run()
+	go s.hub.run()
 
     router := http.NewServeMux()
 
@@ -87,7 +85,7 @@ func (s *APIServer) Run() error {
     router.HandleFunc("POST /prompt", s.handlePrompt)
 
 	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		serveWs(hub, w, r)
+		s.serveWs(s.hub, w, r)
 	})
 
     router.HandleFunc("GET /users/{uid}", func(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +110,7 @@ func (s *APIServer) Run() error {
 
     logger.PrintAsciiArt()
 
-    l.Info().Str("port", server.Addr).Msg("BIG JOHN serving...")
+    s.log.Info().Str("port", server.Addr).Msg("BIG JOHN serving...")
 
     return server.ListenAndServe()
 }

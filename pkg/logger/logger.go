@@ -5,7 +5,6 @@ import (
     "os"
     "runtime/debug"
     "strconv"
-    "sync"
     "fmt"
     "time"
     "github.com/rs/zerolog"
@@ -24,8 +23,6 @@ $$$$$$$  |$$$$$$\ \$$$$$$  |                    \$$$$$$  | $$$$$$  |$$ |  $$ |$$
 \_______/ \______| \______/                      \______/  \______/ \__|  \__|\__|  \__|
                                                                                           
 `
-
-var once sync.Once
 
 type Logger struct {
 	zerolog.Logger
@@ -82,9 +79,9 @@ func Get() *Logger {
 		Level(zerolog.Level(logLevel)).
 		With().
 		Timestamp().
-		Caller().
 		Str("git_revision", gitRevision).
 		Str("go_version", buildInfo.GoVersion).
+		Caller().
 		Logger()
 
 	return &Logger{logger}

@@ -1,11 +1,13 @@
 package api
 
 import (
+	"big-john/internal/processor"
+	"big-john/pkg/logger"
 	"bytes"
 	"net/http"
 	"time"
+
 	"github.com/gorilla/websocket"
-    "big-john/pkg/logger"
 )
 
 const (
@@ -41,6 +43,9 @@ type Client struct {
 
 	// Buffered channel of outbound messages.
 	send chan []byte
+
+	// The processor for handling prompts
+	processor *processor.Processor
 }
 
 // readPump pumps messages from the websocket connection to the hub.
@@ -49,7 +54,7 @@ type Client struct {
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
 func (c *Client) readPump() {
-    log := logger.Get()
+	log := logger.Get()
 	defer func() {
 		c.hub.unregister <- c
 		c.conn.Close()
@@ -61,12 +66,22 @@ func (c *Client) readPump() {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-                log.Error().Err(err).Msg("Unexpected close on client readPump")
+				log.Error().Err(err).Msg("Unexpected close on client readPump")
 			}
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.broadcast <- message
+
+		// Process the message using the processor
+		response, err := c.processor.ProcessPrompt(string(message))
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to process prompt")
+			response = "Error processing prompt"
+		}
+
+		// c.hub.broadcast <- message
+		c.send <- []byte(response)
+
 	}
 }
 
@@ -117,15 +132,15 @@ func (c *Client) writePump() {
 }
 
 // serveWs handles websocket requests from the peer.
-func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
-    log := logger.Get()
+func (s *APIServer) serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+	log := logger.Get()
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-        log.Error().Err(err).Msg("Problem with WebSocket upgrader while serving...")
+		log.Error().Err(err).Msg("Problem with WebSocket upgrader while serving...")
 		return
 	}
-    log.Info().Msg("Serving ws connection...")
-	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	log.Info().Msg("Serving ws connection...")
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256), processor: s.processor}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in
