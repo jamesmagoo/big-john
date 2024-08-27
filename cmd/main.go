@@ -31,13 +31,10 @@ func main() {
 		port = "5001"
 	}
 
-	// Initialize components
 	aiAdapter := ai.NewAdapter()
 	dataSource := data.NewSource()
 	agent := agent.NewAgent(aiAdapter, dataSource, log)
 	proc := processor.NewProcessor(agent, log)
-
-	// Initialize and run API server
 	server := api.NewAPIServer(":"+port, proc)
 
 	if err := server.Run(); err != nil {

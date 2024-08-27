@@ -12,9 +12,9 @@ type Agent struct {
 	log        *logger.Logger
 }
 
-func NewAgent(a *ai.Adapter, d *data.Source, l *logger.Logger) *Agent {
+func NewAgent(aiModel *ai.Adapter, d *data.Source, l *logger.Logger) *Agent {
 	return &Agent{
-		aiAdapter:  a,
+		aiAdapter:  aiModel,
 		dataSource: d,
 		log:        l,
 	}
