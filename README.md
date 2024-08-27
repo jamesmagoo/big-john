@@ -1,20 +1,48 @@
 # Big John - Concierge Chatbot Server
 
-Welcome to the **Big John Concierge Chatbot Server**! Big John is your friendly, consummate, and gregarious virtual concierge. He is designed to assist users with their needs, providing a professional yet approachable service experience.
+Welcome to the **Big John**! Big John is your friendly, consummate, and gregarious virtual concierge. Big John will help you book an appointment with his friends in just a few messages - whether that be a local restaurant, nail salon or barber! Just text Big John when and where you'd like to book to begin!
 
-![Big John Avatar](big_john_avatar.webp)
+![Big John Avatar](big_john_3.webp)
+
 
 ## About Big John
 
 Big John is always ready to lend a helping hand. His warm smile, expressive eyes, and solid build make him approachable and trustworthy. He’s dressed to impress in a red concierge coat, complete with a name tag that proudly reads "Big John." With his larger-than-life personality and memorable hair, Big John is not only friendly but also a bit quirky. Whether it's providing information, answering questions, or assisting with tasks, Big John ensures users have a pleasant and efficient experience.
 
-## Features
 
-- **Friendly and Approachable**: Big John's demeanor puts users at ease, making him the perfect assistant for any task.
-- **Professional Concierge Service**: Dressed in a red concierge coat with a name tag, Big John embodies professionalism while maintaining a personal touch.
-- **Unique Appearance**: Big John’s distinctive look, complete with memorable hair and a warm smile, makes him a character that users won’t forget.
+***
+Big John is a cutting-edge AI-powered appointment booking software designed specifically for the beauty industry. Whether you're running a nail salon, hair salon, or offering makeup artist services, Big John streamlines your booking process and enhances customer experience.
+Key Features
+
+Intelligent Scheduling: Big John uses advanced AI algorithms to optimize appointment scheduling, maximizing your business efficiency.
+Multi-Service Support: Seamlessly manage bookings for various beauty services, including:
+
+Nail salons
+Hair salons
+Makeup artists (MUAs)
 
 
+24/7 Availability: Allow your clients to book appointments anytime, anywhere.
+User-Friendly Interface: Easy-to-use platform for both service providers and clients.
+Customizable Options: Tailor Big John to fit your specific business needs and branding.
+
+## Benefits
+
+Increased Efficiency: Reduce no-shows and double-bookings with smart scheduling.
+Enhanced Customer Satisfaction: Provide a smooth, hassle-free booking experience for your clients.
+Time-Saving: Automate your appointment management, freeing up time for you to focus on your craft.
+Data Insights: Gain valuable insights into booking patterns and customer preferences.
+
+Getting Started
+Visit our website at www.bigjohnbooking.com to sign up for a free trial and experience the future of beauty service scheduling!
+
+
+***
+
+# Technical Details
+
+## Telegram
+`curl -F "url=https://your-ngrok-url.ngrok.io/telegram/webhook" https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook`
 
 ## Version Tagging System
 

@@ -7,7 +7,6 @@ import (
 	"big-john/internal/store"
 	"big-john/internal/processor"
 	"big-john/pkg/logger"
-	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -15,12 +14,12 @@ import (
 
 func main() {
 	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Println("Error loading .env file")
-	}
-
 	log := logger.Get()
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("Error loading .env file")
+	}
 
 	if os.Getenv("OPENAI_API_KEY") == "" {
 		log.Fatal().Msg("OPENAI_API_KEY environment variable is not set")

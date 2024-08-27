@@ -5,6 +5,9 @@ import (
 	"big-john/pkg/logger"
 	"encoding/json"
 	"net/http"
+	"os"
+
+	"github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type APIServer struct {
@@ -12,14 +15,20 @@ type APIServer struct {
 	processor *processor.Processor
 	log       *logger.Logger
 	hub       *Hub
+	telegramBot      *tgbotapi.BotAPI
 }
 
 func NewAPIServer(addr string, p *processor.Processor) *APIServer {
+	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_AUTH_TOKEN"))
+	if err != nil {
+		logger.Get().Fatal().Err(err).Msg("Failed to create Telegram bot")
+	}
 	return &APIServer{
 		addr:      addr,
 		processor: p,
 		log:       logger.Get(),
 		hub:       newHub(),
+		telegramBot: bot,
 	}
 }
 
@@ -64,6 +73,32 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "home.html")
 }
 
+func (s *APIServer) handleTelegramWebhook(w http.ResponseWriter, r *http.Request) {
+	var update tgbotapi.Update
+	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
+		s.log.Error().Err(err).Msg("Failed to parse Telegram update")
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	if update.Message == nil {
+		return
+	}
+
+	response, err := s.processor.ProcessPrompt(update.Message.Text)
+	if err != nil {
+		s.log.Error().Err(err).Msg("Failed to process Telegram message")
+		return
+	}
+
+	msg := tgbotapi.NewMessage(update.Message.Chat.ID, response)
+	_, err = s.telegramBot.Send(msg)
+	
+	if err != nil {
+		s.log.Error().Err(err).Msg("Failed to send Telegram message")
+	}
+}
+
 func (s *APIServer) Run() error {
 
 	go s.hub.run()
@@ -72,6 +107,8 @@ func (s *APIServer) Run() error {
 
 	router.HandleFunc("/", serveHome)
 	router.HandleFunc("POST /prompt", s.handlePrompt)
+	router.HandleFunc("POST /telegram/webhook", s.handleTelegramWebhook)
+
 	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		s.serveWs(s.hub, w, r)
 	})

@@ -1,11 +1,11 @@
 package ai
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
-	"net/http"
+	"big-john/pkg/logger"
+	"context"
 	"os"
+
+	openai "github.com/sashabaranov/go-openai"
 )
 
 // AIModel defines the interface that all AI models must implement
@@ -33,49 +33,63 @@ func (a *Adapter) ProcessPrompt(prompt string) (string, error) {
 // OpenAIModel is an implementation of the AIModel interface for OpenAI
 type OpenAIModel struct {
 	APIKey string
+	log       *logger.Logger
 }
 
 // NewOpenAIModel creates a new instance of OpenAIModel
 func NewOpenAIModel() *OpenAIModel {
 	return &OpenAIModel{
 		APIKey: os.Getenv("OPENAI_API_KEY"),
+		log: logger.Get(),
 	}
 }
 
 // ProcessPrompt sends a request to the OpenAI API and returns a structured response
 func (o *OpenAIModel) ProcessPrompt(prompt string) (string, error) {
-	requestBody := map[string]interface{}{
-		"model":    "gpt-3.5-turbo",
-		"messages": []map[string]string{{"role": "user", "content": prompt}},
-	}
+	
+	client := openai.NewClient(o.APIKey)
+	resp, err := client.CreateChatCompletion(
+		context.Background(),
+		openai.ChatCompletionRequest{
+			Model: openai.GPT3Dot5Turbo,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleUser,
+					Content: prompt,
+				},
+			},
+		},
+	)
 
-	jsonBody, _ := json.Marshal(requestBody)
-	req, err := http.NewRequest("POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(jsonBody))
 	if err != nil {
+		o.log.Error().Err(err).Msg("Chat completion problem")
 		return "", err
 	}
 
-	req.Header.Set("Authorization", "Bearer "+o.APIKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", errors.New("failed to call OpenAI API")
-	}
-
-	var result map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	if err != nil {
-		return "", err
-	}
-
-	output := result["choices"].([]interface{})[0].(map[string]interface{})["message"].(map[string]interface{})["content"].(string)
+	output := resp.Choices[0].Message.Content
 
 	return output, nil
 }
+
+// Add a new AI model implementation, e.g., AnthropicModel
+type AnthropicModel struct {
+    APIKey string
+    log    *logger.Logger
+}
+
+// NewAnthropicModel creates a new instance of AnthropicModel
+func NewAnthropicModel() *AnthropicModel {
+    return &AnthropicModel{
+        APIKey: os.Getenv("ANTHROPIC_API_KEY"),
+        log:    logger.Get(),
+    }
+}
+
+// ProcessPrompt sends a request to the Anthropic API and returns a structured response
+func (a *AnthropicModel) ProcessPrompt(prompt string) (string, error) {
+    // Implement Anthropic API call here
+    // ...
+	return "anthropic impl TODO", nil
+}
+
+// ... existing code ...
