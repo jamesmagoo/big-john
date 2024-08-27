@@ -1,8 +1,20 @@
 graph TD
-    A[HTTP Server] --> P[Processor]
-    B[WebSocket Handler] --> P
-    P --> C[Agent]
-    C --> D[AI Adapter]
-    C --> E[Data Source]
-    D --> F[AI Models]
-    E --> G[Data Repository]
+    A[Client] -->|HTTP Request| B[API Server]
+    B -->|Process Prompt| C[Processor]
+    C -->|Get Agents| D[AgentManager]
+    D -->|Return Agents| C
+    C -->|Select Agent| E[Agent]
+    E -->|Use| F[AI Adapter]
+    E -->|Use| G[Data Source]
+
+    subgraph "Main Application"
+        B
+        C
+        D
+        E
+    end
+
+    subgraph "External Services"
+        F
+        G
+    end

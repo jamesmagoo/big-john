@@ -30,10 +30,26 @@ func main() {
 		port = "5001"
 	}
 
-	aiAdapter := ai.NewAdapter()
+	agentManager := agent.NewAgentManager()
+
+	// Create multiple AI adapters and agents
+	aiAdapter1 := ai.NewAdapter("openai")
+	aiAdapter2 := ai.NewAdapter("anthropic") // Assuming you have multiple AI providers
 	dataSource := data.NewSource()
-	agent := agent.NewAgent(aiAdapter, dataSource, log)
-	proc := processor.NewProcessor(agent, log)
+
+	agent1 := agent.NewAgent(aiAdapter1, dataSource)
+	agent2 := agent.NewAgent(aiAdapter2, dataSource)
+	categories := []string{"hair", "nails", "makeup"}
+
+    // Create the CategoryAgent
+    categoriserAgent := agent.NewCategoryAgent(aiAdapter1, dataSource, categories)
+
+	agentManager.AddAgent("agent", agent1)
+	agentManager.AddAgent("agent2", agent2)
+	agentManager.AddAgent("categoriser", categoriserAgent)
+
+
+	proc := processor.NewProcessor(agentManager)
 	server := api.NewAPIServer(":"+port, proc)
 
 	if err := server.Run(); err != nil {

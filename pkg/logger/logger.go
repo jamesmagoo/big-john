@@ -7,6 +7,7 @@ import (
     "strconv"
     "fmt"
     "time"
+    "sync"
     "github.com/rs/zerolog"
     "github.com/rs/zerolog/pkgerrors"
     "gopkg.in/natefinch/lumberjack.v2"
@@ -24,66 +25,99 @@ $$$$$$$  |$$$$$$\ \$$$$$$  |                    \$$$$$$  | $$$$$$  |$$ |  $$ |$$
                                                                                           
 `
 
+var (
+    instance *Logger
+    once     sync.Once
+)
+
 type Logger struct {
-	zerolog.Logger
+    zerolog.Logger
 }
 
 func PrintAsciiArt() {
-	fmt.Println(asciiArt)
+    fmt.Print(asciiArt)
 }
 
 func Get() *Logger {
-	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
-	zerolog.TimeFieldFormat = time.RFC3339Nano
+    once.Do(func() {
+        instance = initLogger()
+    })
+    return instance
+}
 
-	logLevel, err := strconv.Atoi(os.Getenv("LOG_LEVEL"))
-	if err != nil {
-		logLevel = int(zerolog.InfoLevel) // default to INFO
-	}
+func initLogger() *Logger {
+    zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+    zerolog.TimeFieldFormat = time.RFC3339Nano
 
-	var output io.Writer = zerolog.ConsoleWriter{
-		Out:        os.Stdout,
-		TimeFormat: time.RFC3339,
-		FieldsExclude: []string{
-			"user_agent",
-			"git_revision",
-			"go_version",
-		},
-	}
+    logLevel, err := strconv.Atoi(os.Getenv("LOG_LEVEL"))
+    if err != nil {
+        logLevel = int(zerolog.InfoLevel) // default to INFO
+    }
 
-	if os.Getenv("APP_ENV") != "development" {
-		fileLogger := &lumberjack.Logger{
-			Filename:   "big-john-demo.log",
-			MaxSize:    5,
-			MaxBackups: 10,
-			MaxAge:     14,
-			Compress:   true,
-		}
+    var output io.Writer = zerolog.ConsoleWriter{
+        Out:        os.Stdout,
+        TimeFormat: time.RFC3339,
+        FieldsExclude: []string{
+            "user_agent",
+            "git_revision",
+            "go_version",
+        },
+    }
 
-		output = zerolog.MultiLevelWriter(os.Stderr, fileLogger)
-	}
+    if os.Getenv("APP_ENV") != "development" {
+        fileLogger := &lumberjack.Logger{
+            Filename:   "big-john-demo.log",
+            MaxSize:    5,
+            MaxBackups: 10,
+            MaxAge:     14,
+            Compress:   true,
+        }
 
-	var gitRevision string
+        output = zerolog.MultiLevelWriter(os.Stderr, fileLogger)
+    }
 
-	buildInfo, ok := debug.ReadBuildInfo()
-	if ok {
-		for _, v := range buildInfo.Settings {
-			if v.Key == "vcs.revision" {
-				gitRevision = v.Value
-				break
-			}
-		}
-	}
+    var gitRevision string
 
-	logger := zerolog.New(output).
-		Level(zerolog.Level(logLevel)).
-		With().
-		Timestamp().
-		Str("git_revision", gitRevision).
-		Str("go_version", buildInfo.GoVersion).
-		Caller().
-		Logger()
+    buildInfo, ok := debug.ReadBuildInfo()
+    if ok {
+        for _, v := range buildInfo.Settings {
+            if v.Key == "vcs.revision" {
+                gitRevision = v.Value
+                break
+            }
+        }
+    }
 
-	return &Logger{logger}
+    logger := zerolog.New(output).
+        Level(zerolog.Level(logLevel)).
+        With().
+        Timestamp().
+        Str("git_revision", gitRevision).
+        Str("go_version", buildInfo.GoVersion).
+        Caller().
+        Logger()
+
+    return &Logger{logger}
+}
+
+// Add convenience methods for different log levels
+func (l *Logger) Info() *zerolog.Event {
+    return l.Logger.Info()
+}
+
+func (l *Logger) Error() *zerolog.Event {
+    return l.Logger.Error()
+}
+
+func (l *Logger) Warn() *zerolog.Event {
+    return l.Logger.Warn()
+}
+
+func (l *Logger) Debug() *zerolog.Event {
+    return l.Logger.Debug()
+}
+
+func (l *Logger) Fatal() *zerolog.Event {
+    return l.Logger.Fatal()
 }
 

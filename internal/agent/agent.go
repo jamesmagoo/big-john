@@ -4,46 +4,45 @@ import (
 	"big-john/internal/ai"
 	"big-john/internal/store"
 	"big-john/pkg/logger"
+	"encoding/json"
+	"strings"
 )
 
-type Agent struct {
+type Agent interface {
+	ProcessInput(input string) (string, error)
+}
+
+type BaseAgent struct {
 	aiAdapter  *ai.Adapter
 	dataSource *data.Source
-	log        *logger.Logger
 }
 
-func NewAgent(aiModel *ai.Adapter, d *data.Source, l *logger.Logger) *Agent {
-	return &Agent{
-		aiAdapter:  aiModel,
-		dataSource: d,
-		log:        l,
-	}
-}
 
-func (a *Agent) ProcessInput(input string) (string, error) {
-	a.log.Info().Str("input", input).Msg("Processing input")
+func (a *BaseAgent) ProcessInput(input string) (string, error) {
+	log := logger.Get()
+	log.Info().Str("input", input).Msg("Processing input")
 
 	// Check if we have a cached response
 	cachedResponse, err := a.dataSource.GetCachedResponse(input)
 	if err == nil {
-		a.log.Info().Msg("Returning cached response")
+		log.Info().Msg("Returning cached response")
 		return cachedResponse, nil
 	}
 
 	// If no cached response, process with AI
-	a.log.Info().Msg("No cache hit, processing with AI")
+	log.Info().Msg("No cache hit, processing with AI")
 
 	response, err := a.aiAdapter.ProcessPrompt(input)
 
 	if err != nil {
-		a.log.Error().Err(err).Msg("Error processing with AI")
+		log.Error().Err(err).Msg("Error processing with AI")
 		return "", err
 	}
 
 	// Store the result
 	err = a.dataSource.StoreResult(input, response)
 	if err != nil {
-		a.log.Error().Err(err).Msg("Failed to store result in cache")
+		log.Error().Err(err).Msg("Failed to store result in cache")
 		// We don't return this error because the AI processing was successful
 	}
 
@@ -61,3 +60,62 @@ func (a *Agent) ProcessInput(input string) (string, error) {
 
 	return response, nil
 }
+
+func NewAgent(aiModel *ai.Adapter, d *data.Source) *BaseAgent {
+	return &BaseAgent{
+		aiAdapter:  aiModel,
+		dataSource: d,
+	}
+}
+
+type CategoryAgent struct {
+	BaseAgent
+	categories []string
+}
+
+func NewCategoryAgent(aiAdapter *ai.Adapter, dataSource *data.Source, categories []string) *CategoryAgent {
+	return &CategoryAgent{
+		BaseAgent:  *NewAgent(aiAdapter, dataSource),
+		categories: categories,
+	}
+}
+
+func (a *CategoryAgent) ProcessInput(input string) (string, error) {
+	log := logger.Get()
+	log.Info().Str("input", input).Msg("Categorizing prompt")
+
+	// Prepare the prompt for the LLM
+	prompt := a.prepareCategoryPrompt(input)
+
+	// Process with AI
+	response, err := a.aiAdapter.ProcessPrompt(prompt)
+	if err != nil {
+		log.Error().Err(err).Msg("Error processing with AI")
+		return "", err
+	}
+
+	// Parse the response
+	category, err := a.parseCategory(response)
+	if err != nil {
+		log.Error().Err(err).Msg("Error parsing category")
+		return "", err
+	}
+
+	return category, nil
+}
+
+func (a *CategoryAgent) prepareCategoryPrompt(input string) string {
+	categoriesJSON, _ := json.Marshal(a.categories)
+	return `Categorize the following input into one of these categories: ` + string(categoriesJSON) + `
+If none of the categories fit, respond with "other".
+Input: "` + input + `"
+Category:`
+}
+
+func (a *CategoryAgent) parseCategory(response string) (string, error) {
+	// Simple parsing: just return the trimmed response
+	// In a more robust implementation, you might want to validate against the known categories
+	return strings.TrimSpace(response), nil
+}
+
+// ... (keep other existing code)

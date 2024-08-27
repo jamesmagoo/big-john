@@ -19,9 +19,18 @@ type Adapter struct {
 }
 
 // NewAdapter creates a new instance of Adapter with an OpenAIModel
-func NewAdapter() *Adapter {
+func NewAdapter(modelType string) *Adapter {
+	var model AIModel
+	switch modelType {
+	case "openai":
+		model = NewOpenAIModel()
+	case "anthropic":
+		model = NewAnthropicModel()
+	default:
+		model = NewOpenAIModel() 
+	}
 	return &Adapter{
-		model: NewOpenAIModel(),
+		model: model,
 	}
 }
 
