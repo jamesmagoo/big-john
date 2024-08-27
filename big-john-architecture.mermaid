@@ -3,15 +3,23 @@ graph TD
     B -->|Process Prompt| C[Processor]
     C -->|Get Agents| D[AgentManager]
     D -->|Return Agents| C
-    C -->|Select Agent| E[Agent]
-    E -->|Use| F[AI Adapter]
-    E -->|Use| G[Data Source]
+    C -->|Categorise| E1[CategoriserAgent]
+    C -->|Find Vendors| E2[VendorAgent]
+    C -->|Booking Agent| E3[BookingAgent]
+    E1 -->|Use| F[AI Adapter]
+    E2 -->|Use| F
+    E3 -->|Use| F
+    E1 -->|Use| G[Data Source]
+    E2 -->|Use| G
+    E3 -->|Use| G
 
     subgraph "Main Application"
         B
         C
         D
-        E
+        E1
+        E2
+        E3
     end
 
     subgraph "External Services"
