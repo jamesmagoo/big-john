@@ -1,0 +1,48 @@
+graph TD
+    A[Client] -->|HTTP Request| B[API Server]
+    B -->|Process Prompt| C[Processor]
+    C -->|Get Agents| D[AgentManager]
+    D -->|Return Agents| C
+    C -->|Categorise| E1[CategoriserAgent]
+    C -->|Find Vendors| E2[VendorAgent]
+    C -->|Booking Agent| E3[BookingAgent]
+    E1 & E2 & E3 -->|Use| F[AI Adapter]
+    E1 & E2 & E3 -->|Use| G[Data Source]
+
+    F -->|NLP Tasks| H1[BERT]
+    F -->|Image Recognition| H2[ResNet]
+    F -->|Text Generation| H3[GPT]
+    F -->|Recommendation| H4[Collaborative Filtering]
+
+    G -->|Product Info| I1[(Product Database)]
+    G -->|User Data| I2[(User Database)]
+    G -->|Vendor Info| I3[(Vendor Database)]
+    G -->|Booking Records| I4[(Booking Database)]
+
+    subgraph "Main Application"
+        B
+        C
+        D
+        E1
+        E2
+        E3
+    end
+
+    subgraph "AI Models"
+        H1
+        H2
+        H3
+        H4
+    end
+
+    subgraph "Data Sources"
+        I1
+        I2
+        I3
+        I4
+    end
+
+    subgraph "External Services"
+        F
+        G
+    end

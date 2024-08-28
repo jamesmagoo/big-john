@@ -5,17 +5,17 @@ import (
 )
 
 type AgentManager struct {
-	agents map[string]Agent // Change from *Agent to Agent
+	agents map[string]Agent 
 }
 
 func NewAgentManager() *AgentManager {
 	return &AgentManager{
-		agents: make(map[string]Agent), // Change from *Agent to Agent
+		agents: make(map[string]Agent), 
 	}
 }
 
 func (am *AgentManager) AddAgent(id string, agent Agent) {
-	am.agents[id] = agent // This line remains the same
+	am.agents[id] = agent 
 }
 
 func (am *AgentManager) GetAgent(id string) (Agent, error) {

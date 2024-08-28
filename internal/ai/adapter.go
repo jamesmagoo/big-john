@@ -15,41 +15,45 @@ type AIModel interface {
 
 // Adapter wraps an AIModel and provides additional functionality
 type Adapter struct {
-	model AIModel
+	aiServiceProvider AIModel
+	modelName string
 }
 
 // NewAdapter creates a new instance of Adapter with an OpenAIModel
-func NewAdapter(modelType string) *Adapter {
+func NewAdapter(modelType string, modelName string) *Adapter {
 	var model AIModel
 	switch modelType {
 	case "openai":
-		model = NewOpenAIModel()
+		model = NewOpenAIModel(modelName)
 	case "anthropic":
-		model = NewAnthropicModel()
+		model = NewAnthropicModel(modelName)
 	default:
-		model = NewOpenAIModel() 
+		model = NewOpenAIModel(modelName) 
 	}
 	return &Adapter{
-		model: model,
+		aiServiceProvider: model,
+		modelName: modelName,
 	}
 }
 
 // ProcessPrompt sends a prompt to the AI model and returns the response
 func (a *Adapter) ProcessPrompt(prompt string) (string, error) {
-	return a.model.ProcessPrompt(prompt)
+	return a.aiServiceProvider.ProcessPrompt(prompt)
 }
 
 // OpenAIModel is an implementation of the AIModel interface for OpenAI
 type OpenAIModel struct {
 	APIKey string
 	log       *logger.Logger
+	modelName string
 }
 
 // NewOpenAIModel creates a new instance of OpenAIModel
-func NewOpenAIModel() *OpenAIModel {
+func NewOpenAIModel(modelName string) *OpenAIModel {
 	return &OpenAIModel{
 		APIKey: os.Getenv("OPENAI_API_KEY"),
 		log: logger.Get(),
+		modelName: modelName,
 	}
 }
 
@@ -60,7 +64,7 @@ func (o *OpenAIModel) ProcessPrompt(prompt string) (string, error) {
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
+			Model: o.modelName,
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleUser,
@@ -84,13 +88,15 @@ func (o *OpenAIModel) ProcessPrompt(prompt string) (string, error) {
 type AnthropicModel struct {
     APIKey string
     log    *logger.Logger
+	modelName string
 }
 
 // NewAnthropicModel creates a new instance of AnthropicModel
-func NewAnthropicModel() *AnthropicModel {
+func NewAnthropicModel(modelName string) *AnthropicModel {
     return &AnthropicModel{
         APIKey: os.Getenv("ANTHROPIC_API_KEY"),
         log:    logger.Get(),
+		modelName: modelName,
     }
 }
 

@@ -4,12 +4,13 @@ import (
 	"big-john/internal/agent"
 	"big-john/internal/ai"
 	"big-john/internal/api"
-	"big-john/internal/store"
 	"big-john/internal/processor"
+	"big-john/internal/store"
 	"big-john/pkg/logger"
 	"os"
 
 	"github.com/joho/godotenv"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 func main() {
@@ -33,8 +34,8 @@ func main() {
 	agentManager := agent.NewAgentManager()
 
 	// Create multiple AI adapters and agents
-	aiAdapter1 := ai.NewAdapter("openai")
-	aiAdapter2 := ai.NewAdapter("anthropic") // Assuming you have multiple AI providers
+	aiAdapter1 := ai.NewAdapter("openai", openai.GPT3Dot5Turbo)
+	aiAdapter2 := ai.NewAdapter("anthropic", "claude-3.5-sonnet")
 	dataSource := data.NewSource()
 
 	agent1 := agent.NewAgent(aiAdapter1, dataSource)
