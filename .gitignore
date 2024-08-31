@@ -27,3 +27,4 @@ tmp
 
 # Binary output directory
 /bin/
+generate-dummy-data.go

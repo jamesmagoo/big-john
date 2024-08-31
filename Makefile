@@ -34,6 +34,17 @@ clean:
 	docker rmi $(DOCKER_IMAGE_NAME):$(VERSION)
 	docker rmi $(DOCKER_IMAGE_NAME):latest
 
+postgres:
+	docker run --name postgres16 -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -d postgres:16-alpine
+
+# Create a new database named 'bigjohn' inside the running 'bigjohndb' Docker container
+# The database is created with 'root' as both the username and owner
+createdb:
+	docker exec -it postgres16 createdb --username=root --owner=root bigjohn
+
+sqlc:
+	sqlc generate
+
 # Run tests (adjust the command as needed for your Go setup)
 test:
 	go test ./...

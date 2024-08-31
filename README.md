@@ -39,7 +39,10 @@ Visit our website at www.bigjohnbooking.com to sign up for a free trial and expe
 
 ***
 
-# Technical Details
+# Technical Notes
+
+## postgres
+`docker run --name postgres16 -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -d postgres:16-alpine`
 
 ## Telegram
 `curl -F "url=https://your-ngrok-url.ngrok.io/telegram/webhook" https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook`
