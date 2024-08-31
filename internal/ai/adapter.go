@@ -1,9 +1,9 @@
 package ai
 
 import (
+	"big-john/internal/util"
 	"big-john/pkg/logger"
 	"context"
-	"os"
 
 	openai "github.com/sashabaranov/go-openai"
 )
@@ -17,22 +17,24 @@ type AIModel interface {
 type Adapter struct {
 	aiServiceProvider AIModel
 	modelName string
+	config *util.Config
 }
 
 // NewAdapter creates a new instance of Adapter with an OpenAIModel
-func NewAdapter(modelType string, modelName string) *Adapter {
+func NewAdapter(modelType string, modelName string, config *util.Config) *Adapter {
 	var model AIModel
 	switch modelType {
 	case "openai":
-		model = NewOpenAIModel(modelName)
+		model = NewOpenAIModel(modelName, config)
 	case "anthropic":
-		model = NewAnthropicModel(modelName)
+		model = NewAnthropicModel(modelName, config)
 	default:
-		model = NewOpenAIModel(modelName) 
+		model = NewOpenAIModel(modelName, config)
 	}
 	return &Adapter{
 		aiServiceProvider: model,
 		modelName: modelName,
+		config: config,
 	}
 }
 
@@ -43,17 +45,19 @@ func (a *Adapter) ProcessPrompt(prompt string) (string, error) {
 
 // OpenAIModel is an implementation of the AIModel interface for OpenAI
 type OpenAIModel struct {
-	APIKey string
+	APIKey    string
 	log       *logger.Logger
 	modelName string
+	config    *util.Config
 }
 
 // NewOpenAIModel creates a new instance of OpenAIModel
-func NewOpenAIModel(modelName string) *OpenAIModel {
+func NewOpenAIModel(modelName string, config *util.Config) *OpenAIModel {
 	return &OpenAIModel{
-		APIKey: os.Getenv("OPENAI_API_KEY"),
-		log: logger.Get(),
+		APIKey:    config.OpenAIAPIKey, 
+		log:       logger.Get(),
 		modelName: modelName,
+		config:    config,
 	}
 }
 
@@ -86,24 +90,26 @@ func (o *OpenAIModel) ProcessPrompt(prompt string) (string, error) {
 
 // Add a new AI model implementation, e.g., AnthropicModel
 type AnthropicModel struct {
-    APIKey string
-    log    *logger.Logger
+	APIKey    string
+	log       *logger.Logger
 	modelName string
+	config    *util.Config
 }
 
 // NewAnthropicModel creates a new instance of AnthropicModel
-func NewAnthropicModel(modelName string) *AnthropicModel {
-    return &AnthropicModel{
-        APIKey: os.Getenv("ANTHROPIC_API_KEY"),
-        log:    logger.Get(),
+func NewAnthropicModel(modelName string, config *util.Config) *AnthropicModel {
+	return &AnthropicModel{
+		APIKey:    config.OpenAIAPIKey, // TODO specific api key needed...
+		log:       logger.Get(),
 		modelName: modelName,
-    }
+		config:    config,
+	}
 }
 
 // ProcessPrompt sends a request to the Anthropic API and returns a structured response
 func (a *AnthropicModel) ProcessPrompt(prompt string) (string, error) {
-    // Implement Anthropic API call here
-    // ...
+	// Implement Anthropic API call here
+	// ...
 	return "anthropic impl TODO", nil
 }
 

@@ -5,37 +5,34 @@ import (
 	"big-john/internal/ai"
 	"big-john/internal/api"
 	"big-john/internal/processor"
-	"big-john/internal/store"
+	data "big-john/internal/store"
+	"big-john/internal/util"
 	"big-john/pkg/logger"
-	"os"
+	"context"
 
-	"github.com/joho/godotenv"
+	"github.com/jackc/pgx/v5/pgxpool"
 	openai "github.com/sashabaranov/go-openai"
 )
 
 func main() {
-	// Load .env file
 	log := logger.Get()
-	err := godotenv.Load()
+	config , err := util.LoadConfig(".")
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error loading .env file")
 	}
 
-	if os.Getenv("OPENAI_API_KEY") == "" {
-		log.Fatal().Msg("OPENAI_API_KEY environment variable is not set")
-	}
+	_, err = pgxpool.New(context.Background(), config.DBSource)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "5001"
+	if err != nil {
+		log.Fatal().Err(err).Msg("Cannot connect to db")
 	}
 
 	agentManager := agent.NewAgentManager()
 
 	// Create multiple AI adapters and agents
-	aiAdapter1 := ai.NewAdapter("openai", openai.GPT3Dot5Turbo)
-	aiAdapter2 := ai.NewAdapter("anthropic", "claude-3.5-sonnet")
+	aiAdapter1 := ai.NewAdapter("openai", openai.GPT3Dot5Turbo, &config)
+	aiAdapter2 := ai.NewAdapter("anthropic", "claude-3.5-sonnet", &config)
 	dataSource := data.NewSource()
 
 	agent1 := agent.NewAgent(aiAdapter1, dataSource)
@@ -51,7 +48,7 @@ func main() {
 
 
 	proc := processor.NewProcessor(agentManager)
-	server := api.NewAPIServer(":"+port, proc)
+	server := api.NewAPIServer(&config, proc)
 
 	if err := server.Run(); err != nil {
 		log.Fatal().Err(err).Msg("Failed to run server")

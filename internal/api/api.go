@@ -2,35 +2,35 @@ package api
 
 import (
 	"big-john/internal/processor"
+	"big-john/internal/util"
 	"big-john/pkg/logger"
 	"net/http"
-	"os"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
 type APIServer struct {
-	addr      string
-	processor *processor.Processor
-	log       *logger.Logger
-	hub       *Hub
-	telegramBot      *tgbotapi.BotAPI
+	config      *util.Config
+	processor   *processor.Processor
+	log         *logger.Logger
+	hub         *Hub
+	telegramBot *tgbotapi.BotAPI
 }
 
-func NewAPIServer(addr string, p *processor.Processor) *APIServer {
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_AUTH_TOKEN"))
+func NewAPIServer(config *util.Config, p *processor.Processor) *APIServer {
+	// TODO should probably not make Telegram bot here? not sure....
+	bot, err := tgbotapi.NewBotAPI(config.TelegramAuthToken)
 	if err != nil {
 		logger.Get().Fatal().Err(err).Msg("Failed to create Telegram bot")
 	}
 	return &APIServer{
-		addr:      addr,
-		processor: p,
-		log:       logger.Get(),
-		hub:       newHub(),
+		config:      config,
+		processor:   p,
+		log:         logger.Get(),
+		hub:         newHub(),
 		telegramBot: bot,
 	}
 }
-
 
 func (s *APIServer) Run() error {
 
@@ -61,7 +61,7 @@ func (s *APIServer) Run() error {
 	)
 
 	server := http.Server{
-		Addr:    s.addr,
+		Addr:    s.config.ServerAddress,
 		Handler: middlewareChain(v1),
 	}
 
