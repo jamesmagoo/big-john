@@ -2,6 +2,7 @@
 DOCKER_IMAGE_NAME := big-john-app
 PORT := 5001
 ENV_FILE := app.env
+DB_URL=postgresql://root:password@localhost:5432/bigjohn?sslmode=disable
 
 # Version tagging
 VERSION := $(shell git describe --tags --always --dirty)
@@ -10,7 +11,6 @@ VERSION := dev
 endif
 
 # Phony targets
-.PHONY: build run run-env stop clean test deps version
 
 # Build the Docker image
 build:
@@ -37,10 +37,26 @@ clean:
 postgres:
 	docker run --name postgres16 -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -d postgres:16-alpine
 
-# Create a new database named 'bigjohn' inside the running 'bigjohndb' Docker container
-# The database is created with 'root' as both the username and owner
 createdb:
 	docker exec -it postgres16 createdb --username=root --owner=root bigjohn
+
+dropdb:
+	docker exec -it postgres16 dropdb bigjohn
+
+migrateup:
+	migrate -path internal/db/postgresql/migration -database "$(DB_URL)" -verbose up
+
+migrateup1:
+	migrate -path internal/db/postgresql/migration -database "$(DB_URL)" -verbose up 1
+
+migratedown:
+	migrate -path internal/db/postgresql/migration -database "$(DB_URL)" -verbose down
+
+migratedown1:
+	migrate -path internal/db/postgresql/migration -database "$(DB_URL)" -verbose down 1
+
+new_migration:
+	migrate create -ext sql -dir internal/db/postgresql/migration -seq $(name)
 
 sqlc:
 	sqlc generate
@@ -62,3 +78,5 @@ down: stop clean
 # Print the current version
 version:
 	@echo $(VERSION)
+
+.PHONY: build run run-env postgres version createdb dropdb migrateup migratedown migrateup1 migratedown1 new_migration sqlc 

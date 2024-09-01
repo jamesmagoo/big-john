@@ -7,7 +7,7 @@ servers: []
 sql:
   - engine: "postgresql"
     queries: "./internal/db/postgresql/query/"
-    schema: "./internal/db/postgresql/schema.sql"
+    schema: "./internal/db/postgresql/migration/"
     gen:
       go:
         package: "db"
