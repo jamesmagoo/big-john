@@ -18,6 +18,7 @@ COPY --from=build /app/bin/big-john /big-john
 
 # Copy static files
 COPY --from=build /app/home.html /home.html
+COPY app.env .
 
 # Set environment variables with default values
 ENV LOG_LEVEL=0

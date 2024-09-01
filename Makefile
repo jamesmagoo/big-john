@@ -1,7 +1,7 @@
 # Variables
 DOCKER_IMAGE_NAME := big-john-app
 PORT := 5001
-ENV_FILE := .env
+ENV_FILE := app.env
 
 # Version tagging
 VERSION := $(shell git describe --tags --always --dirty)

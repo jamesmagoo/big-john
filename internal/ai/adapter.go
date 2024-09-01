@@ -1,6 +1,7 @@
 package ai
 
 import (
+	db "big-john/internal/db/postgresql/sqlc"
 	"big-john/internal/util"
 	"big-john/pkg/logger"
 	"context"
@@ -16,25 +17,27 @@ type AIModel interface {
 // Adapter wraps an AIModel and provides additional functionality
 type Adapter struct {
 	aiServiceProvider AIModel
-	modelName string
-	config *util.Config
+	modelName         string
+	config            *util.Config
+	store             db.Store
 }
 
-// NewAdapter creates a new instance of Adapter with an OpenAIModel
-func NewAdapter(modelType string, modelName string, config *util.Config) *Adapter {
+// NewAdapter creates a new instance of Adapter with an AIModel
+func NewAdapter(modelType string, modelName string, config *util.Config, store db.Store) *Adapter {
 	var model AIModel
 	switch modelType {
 	case "openai":
-		model = NewOpenAIModel(modelName, config)
+		model = NewOpenAIModel(modelName, config, store)
 	case "anthropic":
-		model = NewAnthropicModel(modelName, config)
+		model = NewAnthropicModel(modelName, config, store)
 	default:
-		model = NewOpenAIModel(modelName, config)
+		model = NewOpenAIModel(modelName, config, store)
 	}
 	return &Adapter{
 		aiServiceProvider: model,
-		modelName: modelName,
-		config: config,
+		modelName:         modelName,
+		config:            config,
+		store:             store,
 	}
 }
 
@@ -49,21 +52,36 @@ type OpenAIModel struct {
 	log       *logger.Logger
 	modelName string
 	config    *util.Config
+	store     db.Store
 }
 
 // NewOpenAIModel creates a new instance of OpenAIModel
-func NewOpenAIModel(modelName string, config *util.Config) *OpenAIModel {
+func NewOpenAIModel(modelName string, config *util.Config, store db.Store) *OpenAIModel {
 	return &OpenAIModel{
-		APIKey:    config.OpenAIAPIKey, 
+		APIKey:    config.OpenAIAPIKey,
 		log:       logger.Get(),
 		modelName: modelName,
 		config:    config,
+		store:     store,
 	}
 }
 
 // ProcessPrompt sends a request to the OpenAI API and returns a structured response
 func (o *OpenAIModel) ProcessPrompt(prompt string) (string, error) {
+	// Example database query
+	authors, err := o.store.ListAuthors(context.Background())
+	if err != nil {
+		o.log.Error().Err(err).Msg("Database query failed")
+		return "", err
+	}
 	
+	// Range over authors and print
+	for _, author := range authors {
+		o.log.Info().
+			Str("name", author.Name).
+			Msg("Author details")
+	}
+
 	client := openai.NewClient(o.APIKey)
 	resp, err := client.CreateChatCompletion(
 		context.Background(),
@@ -94,15 +112,17 @@ type AnthropicModel struct {
 	log       *logger.Logger
 	modelName string
 	config    *util.Config
+	store     db.Store
 }
 
 // NewAnthropicModel creates a new instance of AnthropicModel
-func NewAnthropicModel(modelName string, config *util.Config) *AnthropicModel {
+func NewAnthropicModel(modelName string, config *util.Config, store db.Store) *AnthropicModel {
 	return &AnthropicModel{
 		APIKey:    config.OpenAIAPIKey, // TODO specific api key needed...
 		log:       logger.Get(),
 		modelName: modelName,
 		config:    config,
+		store:     store,
 	}
 }
 

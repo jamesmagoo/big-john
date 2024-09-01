@@ -61,13 +61,11 @@ func (s *APIServer) Run() error {
 	)
 
 	server := http.Server{
-		Addr:    s.config.ServerAddress,
+		Addr:    ":"+s.config.ServerAddress,
 		Handler: middlewareChain(v1),
 	}
 
-	logger.PrintAsciiArt()
-
-	s.log.Info().Str("port", server.Addr).Msg("BIG JOHN serving...")
+	s.log.Info().Str("address", server.Addr).Msg("BIG JOHN serving...")
 
 	return server.ListenAndServe()
 }
