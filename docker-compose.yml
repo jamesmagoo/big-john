@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: "postgres:16-alpine"
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=bigjohn
+    ports:
+      - "5432:5432"
+    volumes:
+      - data-volume:/var/lib/postgresql/data
+  api:
+    build: .
+    ports:
+      - "5001:5001"
+    environment:
+      - DB_SOURCE=postgresql://root:password@postgres:5432/bigjohn?sslmode=disable
+    depends_on:
+      - postgres
+
+volumes:
+  data-volume:

@@ -19,7 +19,7 @@ build:
 
 # Run the Docker container with individual environment variables
 run:
-	docker run -p $(PORT):$(PORT) -e LOG_LEVEL=1 -e APP_ENV=development $(DOCKER_IMAGE_NAME):$(VERSION)
+	docker run -p $(PORT):$(PORT) --network big-john-network -e APP_ENV=development $(DOCKER_IMAGE_NAME):$(VERSION)
 
 # Run the Docker container with environment file
 run-env:
@@ -31,8 +31,8 @@ stop:
 
 # Remove the Docker image
 clean:
-	docker rmi $(DOCKER_IMAGE_NAME):$(VERSION)
 	docker rmi $(DOCKER_IMAGE_NAME):latest
+	docker rmi $(DOCKER_IMAGE_NAME):$(VERSION)
 
 postgres:
 	docker run --name postgres16 -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -d postgres:16-alpine

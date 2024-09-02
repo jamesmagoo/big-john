@@ -5,12 +5,13 @@ import (
 )
 
 type Config struct {
-	Environment       string `mapstructure:"ENVIRONMENT"`
+	Env               string `mapstructure:"ENV"`
 	DBDriver          string `mapstructure:"DB_DRIVER"`
 	DBSource          string `mapstructure:"DB_SOURCE"`
 	ServerAddress     string `mapstructure:"SERVER_ADDRESS"`
 	OpenAIAPIKey      string `mapstructure:"OPENAI_API_KEY"`
 	TelegramAuthToken string `mapstructure:"TELEGRAM_AUTH_TOKEN"`
+	LogLevel          int    `mapstructure:"LOG_LEVEL"`
 }
 
 // reads configuration from file or env variables

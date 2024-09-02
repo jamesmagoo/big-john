@@ -4,13 +4,13 @@ import (
     "io"
     "os"
     "runtime/debug"
-    "strconv"
     "fmt"
     "time"
     "sync"
     "github.com/rs/zerolog"
     "github.com/rs/zerolog/pkgerrors"
     "gopkg.in/natefinch/lumberjack.v2"
+    "github.com/spf13/viper"
 )
 
 const asciiArt = `
@@ -49,9 +49,9 @@ func initLogger() *Logger {
     zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
     zerolog.TimeFieldFormat = time.RFC3339Nano
 
-    logLevel, err := strconv.Atoi(os.Getenv("LOG_LEVEL"))
-    if err != nil {
-        logLevel = int(zerolog.InfoLevel) // default to INFO
+    logLevel := viper.GetInt("LOG_LEVEL")
+    if logLevel == 0 {
+        logLevel = int(zerolog.InfoLevel)
     }
 
     var output io.Writer = zerolog.ConsoleWriter{
@@ -64,7 +64,7 @@ func initLogger() *Logger {
         },
     }
 
-    if os.Getenv("APP_ENV") != "development" {
+    if viper.GetString("ENV") != "development" {
         fileLogger := &lumberjack.Logger{
             Filename:   "big-john-demo.log",
             MaxSize:    5,

@@ -16,9 +16,9 @@ import (
 )
 
 func main() {
-	log := logger.Get()
 	logger.PrintAsciiArt()
 	config, err := util.LoadConfig(".")
+	log := logger.Get()
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error loading .env file")
