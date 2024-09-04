@@ -35,13 +35,13 @@ clean:
 	docker rmi $(DOCKER_IMAGE_NAME):$(VERSION)
 
 postgres:
-	docker run --name postgres16 -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -d postgres:16-alpine
+	docker run --name postgres -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -d postgres:16-alpine
 
 createdb:
-	docker exec -it postgres16 createdb --username=root --owner=root bigjohn
+	docker exec -it postgres createdb --username=root --owner=root bigjohn
 
 dropdb:
-	docker exec -it postgres16 dropdb bigjohn
+	docker exec -it postgres dropdb bigjohn
 
 migrateup:
 	migrate -path internal/db/postgresql/migration -database "$(DB_URL)" -verbose up

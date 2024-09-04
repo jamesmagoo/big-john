@@ -32,7 +32,6 @@ func main() {
 
 	err = pool.Ping(context.Background())
 
-
 	if err != nil {
 		log.Error().Err(err).Msg("Pinged db pool fail..")
 	} else {

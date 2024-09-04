@@ -9,11 +9,20 @@ import (
 )
 
 type Querier interface {
-	CreateAuthor(ctx context.Context, arg CreateAuthorParams) (Author, error)
-	DeleteAuthor(ctx context.Context, id int64) error
-	GetAuthor(ctx context.Context, id int64) (Author, error)
-	ListAuthors(ctx context.Context) ([]Author, error)
-	UpdateAuthor(ctx context.Context, arg UpdateAuthorParams) error
+	CheckAvailability(ctx context.Context, arg CheckAvailabilityParams) ([]int32, error)
+	CreateAppointment(ctx context.Context, arg CreateAppointmentParams) (Appointment, error)
+	CreateServiceProvider(ctx context.Context, arg CreateServiceProviderParams) (ServiceProvider, error)
+	CreateWorkingHours(ctx context.Context, arg CreateWorkingHoursParams) (WorkingHour, error)
+	DeleteAppointment(ctx context.Context, id int32) error
+	DeleteServiceProvider(ctx context.Context, id int32) error
+	DeleteWorkingHours(ctx context.Context, arg DeleteWorkingHoursParams) error
+	GetAppointment(ctx context.Context, id int32) (Appointment, error)
+	GetWorkingHours(ctx context.Context, serviceProviderID int32) ([]WorkingHour, error)
+	ListAppointments(ctx context.Context, arg ListAppointmentsParams) ([]Appointment, error)
+	ListServiceProviders(ctx context.Context) ([]ServiceProvider, error)
+	UpdateAppointmentStatus(ctx context.Context, arg UpdateAppointmentStatusParams) error
+	UpdateServiceProvider(ctx context.Context, arg UpdateServiceProviderParams) error
+	UpdateWorkingHours(ctx context.Context, arg UpdateWorkingHoursParams) error
 }
 
 var _ Querier = (*Queries)(nil)

@@ -21,7 +21,7 @@ COPY internal/db/postgresql/migration ./db/migration
 COPY app.env .
 COPY start.sh .
 RUN chmod +x /app/start.sh  
-RUN ls -R
+# RUN ls -R
 
 ENV LOG_LEVEL=1
 ENV APP_ENV=production

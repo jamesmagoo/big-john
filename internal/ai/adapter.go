@@ -69,7 +69,7 @@ func NewOpenAIModel(modelName string, config *util.Config, store db.Store) *Open
 // ProcessPrompt sends a request to the OpenAI API and returns a structured response
 func (o *OpenAIModel) ProcessPrompt(prompt string) (string, error) {
 	// Example database query
-	authors, err := o.store.ListAuthors(context.Background())
+	authors, err := o.store.ListServiceProviders(context.Background())
 	if err != nil {
 		o.log.Error().Err(err).Msg("Database query failed")
 		return "", err

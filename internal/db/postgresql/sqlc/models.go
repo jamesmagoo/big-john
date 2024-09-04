@@ -8,8 +8,28 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Author struct {
-	ID   int64       `json:"id"`
-	Name string      `json:"name"`
-	Bio  pgtype.Text `json:"bio"`
+type Appointment struct {
+	ID                int32            `json:"id"`
+	ServiceProviderID int32            `json:"service_provider_id"`
+	ClientName        string           `json:"client_name"`
+	ClientEmail       string           `json:"client_email"`
+	AppointmentDate   pgtype.Date      `json:"appointment_date"`
+	StartTime         pgtype.Time      `json:"start_time"`
+	EndTime           pgtype.Time      `json:"end_time"`
+	Status            string           `json:"status"`
+	CreatedAt         pgtype.Timestamp `json:"created_at"`
+}
+
+type ServiceProvider struct {
+	ID        int32       `json:"id"`
+	Name      string      `json:"name"`
+	Specialty pgtype.Text `json:"specialty"`
+}
+
+type WorkingHour struct {
+	ID                int32       `json:"id"`
+	ServiceProviderID int32       `json:"service_provider_id"`
+	DayOfWeek         int32       `json:"day_of_week"`
+	StartTime         pgtype.Time `json:"start_time"`
+	EndTime           pgtype.Time `json:"end_time"`
 }

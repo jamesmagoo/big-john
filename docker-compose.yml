@@ -10,7 +10,7 @@ services:
     volumes:
       - data-volume:/var/lib/postgresql/data
   api:
-    build: .
+    image: "big-john-app:latest"
     ports:
       - "5001:5001"
     environment:
