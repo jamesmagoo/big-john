@@ -2,7 +2,10 @@
 DOCKER_IMAGE_NAME := big-john-app
 PORT := 5001
 ENV_FILE := app.env
-DB_URL=postgresql://root:password@localhost:5432/bigjohn?sslmode=disable
+DB_URL=postgresql://root:password@postgres:5432/bigjohn?sslmode=disable
+DB_NAME := bigjohn
+DB_USER := root
+DB_PASSWORD := password
 
 # Version tagging
 VERSION := $(shell git describe --tags --always --dirty)
@@ -19,7 +22,7 @@ build:
 
 # Run the Docker container with individual environment variables
 run:
-	docker run -p $(PORT):$(PORT) --network big-john-network -e APP_ENV=development $(DOCKER_IMAGE_NAME):$(VERSION)
+	docker run -p $(PORT):$(PORT) --network big-john-network -e APP_ENV=development $(DOCKER_IMAGE_NAME):$(VERSION) -d
 
 # Run the Docker container with environment file
 run-env:
@@ -38,10 +41,10 @@ postgres:
 	docker run --name postgres -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -d postgres:16-alpine
 
 createdb:
-	docker exec -it postgres createdb --username=root --owner=root bigjohn
+	docker exec -it big-john-postgres-1 createdb --username=root --owner=root bigjohn
 
 dropdb:
-	docker exec -it postgres dropdb bigjohn
+	docker exec -it big-john-postgres-1 dropdb bigjohn
 
 migrateup:
 	migrate -path internal/db/postgresql/migration -database "$(DB_URL)" -verbose up
@@ -57,6 +60,12 @@ migratedown1:
 
 new_migration:
 	migrate create -ext sql -dir internal/db/postgresql/migration -seq $(name)
+
+seed:
+	@echo "Seeding the database..."
+	@cat seed.sql | docker exec -i big-john-postgres-1 psql -U $(DB_USER) -d $(DB_NAME)
+
+resetdb: dropdb createdb migrateup seed
 
 sqlc:
 	sqlc generate

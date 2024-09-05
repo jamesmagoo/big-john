@@ -5,6 +5,8 @@ services:
       - POSTGRES_USER=root
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=bigjohn
+    healthcheck:
+      test: pg_isready -U postgres
     ports:
       - "5432:5432"
     volumes:
@@ -16,7 +18,8 @@ services:
     environment:
       - DB_SOURCE=postgresql://root:password@postgres:5432/bigjohn?sslmode=disable
     depends_on:
-      - postgres
+     postgres:
+        condition: service_healthy
 
 volumes:
   data-volume:
