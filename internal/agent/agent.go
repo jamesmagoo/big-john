@@ -2,8 +2,9 @@ package agent
 
 import (
 	"big-john/internal/ai"
-	"big-john/internal/store"
+	db "big-john/internal/db/postgresql/sqlc"
 	"big-john/pkg/logger"
+	"context"
 	"encoding/json"
 	"strings"
 )
@@ -13,24 +14,13 @@ type Agent interface {
 }
 
 type BaseAgent struct {
-	aiAdapter  *ai.Adapter
-	dataSource *data.Source
+	aiAdapter *ai.Adapter
+	store     db.Store
 }
-
 
 func (a *BaseAgent) ProcessInput(input string) (string, error) {
 	log := logger.Get()
 	log.Info().Str("input", input).Msg("Processing input")
-
-	// Check if we have a cached response
-	cachedResponse, err := a.dataSource.GetCachedResponse(input)
-	if err == nil {
-		log.Info().Msg("Returning cached response")
-		return cachedResponse, nil
-	}
-
-	// If no cached response, process with AI
-	log.Info().Msg("No cache hit, processing with AI")
 
 	response, err := a.aiAdapter.ProcessPrompt(input)
 
@@ -39,12 +29,7 @@ func (a *BaseAgent) ProcessInput(input string) (string, error) {
 		return "", err
 	}
 
-	// Store the result
-	err = a.dataSource.StoreResult(input, response)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to store result in cache")
-		// We don't return this error because the AI processing was successful
-	}
+	// Store the result - REDIS
 
 	// TODO: Implement additional AI agent capabilities:
 	// 1. Natural language understanding to categorize user intents
@@ -61,10 +46,10 @@ func (a *BaseAgent) ProcessInput(input string) (string, error) {
 	return response, nil
 }
 
-func NewAgent(aiModel *ai.Adapter, d *data.Source) *BaseAgent {
+func NewAgent(aiModel *ai.Adapter, store db.Store) *BaseAgent {
 	return &BaseAgent{
 		aiAdapter:  aiModel,
-		dataSource: d,
+		store: store,
 	}
 }
 
@@ -73,9 +58,9 @@ type CategoryAgent struct {
 	categories []string
 }
 
-func NewCategoryAgent(aiAdapter *ai.Adapter, dataSource *data.Source, categories []string) *CategoryAgent {
+func NewCategoryAgent(aiAdapter *ai.Adapter, store db.Store, categories []string) *CategoryAgent {
 	return &CategoryAgent{
-		BaseAgent:  *NewAgent(aiAdapter, dataSource),
+		BaseAgent:  *NewAgent(aiAdapter, store),
 		categories: categories,
 	}
 }
@@ -83,6 +68,18 @@ func NewCategoryAgent(aiAdapter *ai.Adapter, dataSource *data.Source, categories
 func (a *CategoryAgent) ProcessInput(input string) (string, error) {
 	log := logger.Get()
 	log.Info().Str("input", input).Msg("Categorizing prompt")
+	service_providers, err := a.store.ListServiceProviders(context.Background())
+	if err != nil {
+		log.Error().Err(err).Msg("Database query failed")
+		return "", err
+	}
+	
+	for _, service_provider := range service_providers {
+		log.Info().
+			Str("name", service_provider.Name).
+			Str("speciality", service_provider.Specialty.String).
+			Msg("Service Provider details")
+	}
 
 	// Prepare the prompt for the LLM
 	prompt := a.prepareCategoryPrompt(input)

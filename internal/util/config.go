@@ -8,6 +8,7 @@ type Config struct {
 	Env               string `mapstructure:"ENV"`
 	DBDriver          string `mapstructure:"DB_DRIVER"`
 	DBSource          string `mapstructure:"DB_SOURCE"`
+	DBSourceLocal     string `mapstructure:"DB_SOURCE_LOCAL"`
 	ServerAddress     string `mapstructure:"SERVER_ADDRESS"`
 	OpenAIAPIKey      string `mapstructure:"OPENAI_API_KEY"`
 	TelegramAuthToken string `mapstructure:"TELEGRAM_AUTH_TOKEN"`

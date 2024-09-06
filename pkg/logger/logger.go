@@ -64,7 +64,8 @@ func initLogger() *Logger {
         },
     }
 
-    if viper.GetString("ENV") != "development" {
+    env := viper.Get("ENV")
+    if env != "dev" && env !="local"  {
         fileLogger := &lumberjack.Logger{
             Filename:   "big-john-demo.log",
             MaxSize:    5,

@@ -6,7 +6,6 @@ import (
 	"big-john/internal/api"
 	db "big-john/internal/db/postgresql/sqlc"
 	"big-john/internal/processor"
-	data "big-john/internal/store"
 	"big-john/internal/util"
 	"big-john/pkg/logger"
 	"context"
@@ -24,7 +23,14 @@ func main() {
 		log.Fatal().Err(err).Msg("Error loading .env file")
 	}
 
-	pool, err := pgxpool.New(context.Background(), config.DBSource)
+	var pool *pgxpool.Pool
+
+	if config.Env == "local" {
+		log.Info().Msg("Using local db source")
+		pool, err = pgxpool.New(context.Background(), config.DBSourceLocal)
+	} else {
+		pool, err = pgxpool.New(context.Background(), config.DBSource)
+	}
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Cannot connect to db")
@@ -43,16 +49,15 @@ func main() {
 	agentManager := agent.NewAgentManager()
 
 	// Create multiple AI adapters and agents
-	aiAdapter1 := ai.NewAdapter("openai", openai.GPT3Dot5Turbo, &config , store)
-	aiAdapter2 := ai.NewAdapter("anthropic", "claude-3.5-sonnet", &config, store)
-	dataSource := data.NewSource()
+	aiAdapter1 := ai.NewAdapter("openai", openai.GPT3Dot5Turbo, &config)
+	aiAdapter2 := ai.NewAdapter("anthropic", "claude-3.5-sonnet", &config)
 
-	agent1 := agent.NewAgent(aiAdapter1, dataSource)
-	agent2 := agent.NewAgent(aiAdapter2, dataSource)
-	categories := []string{"hair", "nails", "makeup"}
+	agent1 := agent.NewAgent(aiAdapter1, store)
+	agent2 := agent.NewAgent(aiAdapter2, store)
+	categories := []string{"availability", "service_providers", "appointments"}
 
 	// Create the CategoryAgent
-	categoriserAgent := agent.NewCategoryAgent(aiAdapter1, dataSource, categories)
+	categoriserAgent := agent.NewCategoryAgent(aiAdapter1, store, categories)
 
 	agentManager.AddAgent("agent", agent1)
 	agentManager.AddAgent("agent2", agent2)
